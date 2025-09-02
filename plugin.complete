@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# This script generates chart names for autocompletion
+
+# Helm passes the current word as the first argument
+CURR_WORD="$1"
+
+get_repo_charts() {
+  # helm search repo lists charts from configured repositories
+
+  if [ -d "$HOME/.cache" ]; then
+    CACHE_DIR="$HOME/.cache/helm-defaults"
+  else
+    CACHE_DIR="/tmp/helm-defaults-$USER"
+  fi
+
+  CACHE_FILE="$CACHE_DIR/repo-charts.cache"
+  CACHE_AGE_MINUTES=10
+
+  mkdir -p "$CACHE_DIR" 2>/dev/null
+
+  if [ -f "$CACHE_FILE" ]; then
+    if [ "$(find "$CACHE_FILE" -mmin -$CACHE_AGE_MINUTES 2>/dev/null)" ]; then
+      # Cache is fresh, use it
+      cat "$CACHE_FILE"
+      return 0
+    fi
+  fi
+
+  helm search repo --devel --output yaml 2>/dev/null | yq e '.[].name' - > "$CACHE_FILE" 2>/dev/null
+
+  cat "$CACHE_FILE" 2>/dev/null
+}
+
+get_local_charts() {
+  echo "./"
+  echo "."
+
+  find . -name Chart.yaml -type f -maxdepth 3 2>/dev/null | sed 's|/Chart.yaml$||' | sed 's|^./||'
+}
+
+# Combine repo and local charts, then filter and sort unique
+(get_repo_charts; get_local_charts) | sort -u
+
+exit 0

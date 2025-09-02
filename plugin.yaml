@@ -1,0 +1,11 @@
+name: "defaults"
+version: "0.1.0"
+usage: "defaults CHART"
+description: "Show the default values of a chart in a prettified format"
+ignoreFlags: false
+platformCommand:
+  - os: linux
+    command: "${HELM_PLUGIN_DIR}/defaults.sh"
+  - os: darwin
+    command: "${HELM_PLUGIN_DIR}/defaults.sh"
+hooks: {}
